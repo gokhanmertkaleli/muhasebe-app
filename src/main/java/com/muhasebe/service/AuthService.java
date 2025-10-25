@@ -122,11 +122,21 @@ public class AuthService {
             throw new RuntimeException("Bu email adresi zaten kullanılıyor");
         }
 
-        // Şirket kontrolü
+        // Şirket kontrolü veya oluşturma
         Company company = null;
         if (request.getCompanyId() != null) {
             company = companyRepository.findById(request.getCompanyId())
                     .orElseThrow(() -> new RuntimeException("Şirket bulunamadı"));
+        } else {
+            // Şirket yoksa otomatik oluştur (ilk kullanıcı için)
+            company = Company.builder()
+                    .name(request.getFirstName() + " " + request.getLastName() + " Şirketi")
+                    .taxNumber(String.valueOf(System.currentTimeMillis()).substring(0, 10))
+                    .taxOffice("Varsayılan")
+                    .country("Türkiye")
+                    .isActive(true)
+                    .build();
+            company = companyRepository.save(company);
         }
 
         // Kullanıcı oluştur
